@@ -1,0 +1,86 @@
+;(function(w){
+	function MiSuatMenuPanel(){
+		var self = this;
+		this.main = document.getElementById('mi_suat_menu_panel');
+
+		var div_nombre = $(this.main).find('.nombre')[0];
+		var logout_btn = $(this.main).find('.logout_btn')[0];
+
+		var enviando = false;
+
+		$(logout_btn).bind('click', onClickLogoutBtn);
+
+		this.mostrar = function(){
+			$(div_nombre).html($.suat.usuario.nombre+' '+$.suat.usuario.apellido);
+			$(self.main).addClass('active');
+			
+			$('#navBar').find('a[data-bind="ver_reservar"]').closest('li').hide();
+			$('#mi_suat_menu_panel').find('a[data-bind="ver_historia"]').closest('li').hide();
+			$('#mi_suat_menu_panel').find('a[data-bind="ver_estadocuenta"]').closest('li').hide();
+			$('#mi_suat_menu_panel').find('a[data-bind="ver_reservas"]').closest('li').hide();
+			$('#mi_suat_menu_panel').find('a[data-bind="ver_facturas"]').closest('li').hide();
+			$('#mi_suat_menu_panel').find('a[data-bind="ver_informacion_personal"]').closest('li').hide();
+			$('#mi_suat_menu_panel').find('a[data-bind="ver_menores_cargo"]').closest('li').hide();
+			$('#mi_suat_menu_panel').find('a[data-bind="ver_configuracion"]').closest('li').hide();
+			
+			// Servicios que puede ver
+			if($.suat.usuario.es_menor){
+				$('#navBar').find('a[data-bind="ver_reservar"]').closest('li').show();
+				$('#mi_suat_menu_panel').find('a[data-bind="ver_historia"]').closest('li').show();
+				$('#mi_suat_menu_panel').find('a[data-bind="ver_informacion_personal"]').closest('li').show();
+				$('#mi_suat_menu_panel').find('a[data-bind="ver_reservas"]').closest('li').show();
+			}else{
+				if($.suat.usuario.servicios.ver_reservar) $('#navBar').find('a[data-bind="ver_reservar"]').closest('li').show();
+				if($.suat.usuario.servicios.ver_historia) $('#mi_suat_menu_panel').find('a[data-bind="ver_historia"]').closest('li').show();
+				if($.suat.usuario.servicios.ver_estadocuenta)	$('#mi_suat_menu_panel').find('a[data-bind="ver_estadocuenta"]').closest('li').show();
+				if($.suat.usuario.servicios.ver_reservas) $('#mi_suat_menu_panel').find('a[data-bind="ver_reservas"]').closest('li').show();
+				if($.suat.usuario.servicios.ver_facturas)	$('#mi_suat_menu_panel').find('a[data-bind="ver_facturas"]').closest('li').show();
+				if($.suat.usuario.servicios.ver_informacion_personal) $('#mi_suat_menu_panel').find('a[data-bind="ver_informacion_personal"]').closest('li').show();
+				if($.suat.usuario.servicios.ver_menores_cargo) $('#mi_suat_menu_panel').find('a[data-bind="ver_menores_cargo"]').closest('li').show();
+				if($.suat.usuario.servicios.ver_configuracion) $('#mi_suat_menu_panel').find('a[data-bind="ver_configuracion"]').closest('li').show();
+			}
+		}
+
+		this.ocultar = function(){
+			$(self.main).removeClass('active');
+		}
+
+		function onClickLogoutBtn(e){
+			e.preventDefault();
+
+			if(!enviando){
+				enviando = true;
+				
+				$(logout_btn).parent().toggleClass('sending', true);
+
+				$.ajax({
+					url: MISUAT_PATH + 'auth/logout/',
+					type: 'get',
+					success: onUsuarioLogout,
+					complete: function() { $(logout_btn).parent().toggleClass('sending', false); }
+				});
+			}
+		}
+
+		function onUsuarioLogout(response){
+			enviando = false;
+
+			if(!response.error){
+				if($.suat.usuario.documento_tipo_id=="214"){
+					SECCION_PRIVADA=true;
+				}
+				$.suat.usuario = null;
+
+				if(SECCION_PRIVADA || response.reload===true){
+					window.location.href = WEB_PATH;
+				}else{
+					var evt = jQuery.Event('MI_SUAT_MENU_NAVEGAR');
+					evt.seccion = 'login';
+					$(self.main).trigger(evt);
+				}
+			}
+		}
+	}
+
+	w.MiSuatMenuPanel = MiSuatMenuPanel;
+})(window)

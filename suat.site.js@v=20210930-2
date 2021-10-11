@@ -1,0 +1,354 @@
+(function($, window, undefined) {
+	$.suat.site = $.extend({}, {
+		misuat_menu: false,
+		groupLogin:'persona',
+		mobile:  (window.innerWidth <= 991)?true:false,
+		init: function(){
+			$(window).resize(function() {
+				$.suat.site.mobile=(window.innerWidth <= 991)?true:false;
+			});
+
+			this.misuat_menu = new MiSuatMenu();
+
+			$.suat.alerta = new Alerta();
+
+			$(document).mouseup(function(e){
+				var container = $("#mi_suat_menu");
+				// if the target of the click isn't the container nor a descendant of the container
+				if (!container.is(e.target) && container.has(e.target).length === 0){
+					e.preventDefault();
+					container.hide();
+				}
+			});
+
+			new WOW().init();
+			$('[data-toggle="tooltip"]').popover({
+				trigger: "manual",
+				html: true,
+				animation: false,
+				placement: function(context, source) {
+					var position = $(source).position();
+
+					if (position.left > 515) {
+						return "left";
+					}
+
+					if (position.left < 515) {
+						return "right";
+					}
+
+					if (position.top < 110) {
+						return "bottom";
+					}
+
+					return "top";
+				}
+			}).on("mouseenter", function() {
+				var _this = this;
+				$(this).popover("show");
+				$(".popover").on("mouseleave", function() {
+					setTimeout(function() {
+						if (!$(".popover:hover").length) {
+							$(_this).popover("hide");
+						}
+					}, 500);
+				});
+			}).on("mouseleave", function() {
+				var _this = this;
+				setTimeout(function() {
+					if (!$(".popover:hover").length) {
+						$(_this).popover("hide");
+					}
+				}, 500);
+			});
+			//*****************************************************************************************
+			//**** LINKS MI SUAT ****
+			//*****************************************************************************************
+			$('#home_misuat_hc').on('click', function(e) {
+				// Solo si NO esta conectado
+				if ($.suat.usuario) {
+					return;
+				}
+
+				e.preventDefault();
+				$.suat.site.openMiSUAT();
+			});
+
+			$('#home_misuat_acceder, #footer_misuat_link, #mobile_misuat_dropdown').on('click', function(e) {
+				e.preventDefault();
+				$.suat.site.openMiSUAT();
+			});
+
+			$('#mobile_misuat_link').on('click', function(e) {
+				e.preventDefault();
+				$.suat.site.openMiSUAT();
+			});
+
+			//*****************************************************************************************
+			//**** SHARE EMAIL ****
+			$('.share_email').on('click', function(evt) {
+				evt.preventDefault();
+				$('#modalShareEmail .title').text($(this).attr('data-titulo'));
+
+				$('#modalShareEmail input[name=titulo]').val($(this).attr('data-titulo'));
+				$('#modalShareEmail input[name=url]').val($(this).attr('data-url'));
+				$('#modalShareEmail input[name=copete]').val($(this).attr('data-copete'));
+				$('#modalShareEmail input[name=imagen]').val($(this).attr('data-imagen'));
+
+				$.suat.hideMessage($('#modalShareEmail form'));
+				$('#modalShareEmail').modal('show');
+			});
+			$('#modalShareEmail .btn_enviar').on('click', function(evt) {
+				evt.preventDefault();
+				$('#modalShareEmail form').find('.has-error').removeClass('has-error');
+				$.suat.doEnviar(
+						$('#modalShareEmail form'),
+						function(form, data) {
+							$.suat.showMessage(form, 'Campartir enviado correctamente', 'success');
+							$.suat.borrarFormulario(form);
+							grecaptcha.reset();
+							setTimeout(function() {
+								$.suat.hideMessage(form);
+								$('#modalShareEmail').modal('hide');
+							}, 2000);
+						},
+						function(form, data) {
+							$.suat.showMessage(form, data.errors);
+							$.suat.showInputErrors(form, data.inputs_errors);
+						}
+				);
+			});
+
+			//*****************************************************************************************
+			//**** CONSULTA ****
+			$('#consultaForm .btn_enviar').on('click', function(evt) {
+				evt.preventDefault();
+				$('#consultaForm form').find('.has-error').removeClass('has-error');
+				$.suat.doEnviar(
+						$('#consultaForm form'),
+						function(form, data) {
+							$.suat.showMessage(form, 'Consulta enviada correctamente', 'success');
+							$.suat.borrarFormulario(form);
+							grecaptcha.reset();
+							setTimeout(function() {
+								$.suat.hideMessage(form);
+							}, 2000);
+						},
+						function(form, data) {
+							$.suat.showMessage(form, data.errors);
+							$.suat.showInputErrors(form, data.inputs_errors);
+						}
+				);
+			});
+
+			//*****************************************************************************************
+			//**** SUSCRIPCION AL BOLETIN ****
+			$.suat.doEnter($('#form_suscripcion input'), $('#form_suscripcion .btn_enviar'));
+			$('#form_suscripcion .btn_enviar').on('click', function(evt) {
+				evt.preventDefault();
+				$('#form_suscripcion').find('.has-error').removeClass('has-error');
+				$.suat.doEnviar(
+						$('#form_suscripcion'),
+						function(form, data) {
+							$.suat.showMessage(form, 'Te has suscripto a nuestro newsletter.', 'success');
+							$.suat.borrarFormulario(form);
+						},
+						function(form, data) {
+							$.suat.showMessage(form, data.errors);
+							$.suat.showInputErrors(form, data.inputs_errors);
+						}
+				);
+			});
+
+
+			//*****************************************************************************************
+			//**** CONSULTA ****
+			$.suat.doEnter($('.search_bar input'), $('.search_bar .btn_search'));
+
+			$('.search_bar .btn_search').click(function(evt) {
+				evt.preventDefault();
+
+				var search_bar = $(this).closest('.search_bar');
+				var search_bar_input = search_bar.find('input[name=search]');
+
+				if (!search_bar.hasClass('active')) {
+					search_bar.addClass('active');
+					search_bar_input.focus();
+				} else {
+					if (search_bar_input.val() != '') {
+						document.location = WEB_PATH + 'busqueda/?search=' + search_bar_input.val();
+					}
+				}
+			});
+			$('.search_bar .close').click(function(evt) {
+				evt.preventDefault();
+
+				var search_bar = $(this).closest('.search_bar');
+				search_bar.removeClass('active');
+			});
+
+			//*****************************************************************************************
+			//**** GENERAL ****
+			$('.item-toggle .info').hide();
+			$('.item-toggle').removeClass('active');
+			$('.item-toggle').click(function(evt) {
+				evt.preventDefault();
+				$(this).find('.info').slideToggle("fast");
+				$(this).toggleClass('active');
+			});
+
+			$('.btn-back').click(function(evt) {
+				evt.preventDefault();
+				if(document.referrer.indexOf(WEB_PATH)!=-1){
+					history.back(-1);
+				}else{
+					document.location=$(this).data('back');
+				}
+			});
+
+			$('#open_phone').click(function(evt) {
+				evt.preventDefault();
+				$('.top-bar').toggleClass('active');
+			});
+			$('.phone-mobile').click(function(evt) {
+				evt.preventDefault();
+				$('.top-bar').toggleClass('active');
+
+				if ($(window).width() < 992 && $('.top-bar').hasClass('active')) {
+					var search_bar_mobile = $('.search-bar-mobile');
+
+					if (search_bar_mobile.hasClass('active')) {
+						search_bar_mobile.removeClass('active');
+					}
+				}
+			});
+			$('.search-mobile').click(function(evt) {
+				evt.preventDefault();
+				$('.search-bar-mobile').toggleClass('active');
+
+				if ($(window).width() < 992 && $('.search-bar-mobile').hasClass('active')) {
+					var top_bar = $('.top-bar');
+
+					if (top_bar.hasClass('active')) {
+						top_bar.removeClass('active');
+					}
+				}
+			});
+			$('.top-bar .close').click(function(evt) {
+				evt.preventDefault();
+				$('.top-bar').removeClass('active');
+			});
+
+			$('.zoomUp').click(function(evt) {
+				evt.preventDefault();
+
+				$.suat.zoomUp();
+			});
+			$('.zoomDown').click(function(evt) {
+				evt.preventDefault();
+
+				$.suat.zoomDown();
+			});
+			$('.btn-openLogin').click(function(evt) {
+				evt.preventDefault();
+				$.suat.site.openMiSUAT();
+			});
+
+			$('#misuat_dropdown .btnLogin').click(function(evt) {
+				evt.preventDefault();
+				$('#mi_suat_menu').slideToggle('fast');
+			});
+
+
+			$('.nav.tab a').on('click', function(evt){
+				evt.preventDefault();
+				$(this).closest('.tab').find('li').removeClass('active');
+				$(this).closest('li').addClass('active');
+
+				var input_documento_valor = new Input($('#mi_suat_menu_login input[name="documento_valor"]')[0]);
+				if($(this).data('type')=='persona'){
+					$('#misuat_form_login .type_persona').show();
+					$('#misuat_form_login .type_empresa').hide();
+					$('#mi_suat_menu_login input[name="documento_valor"]').val('');
+
+					if ($('#mi_suat_menu_login input[name="documento_tipo_id"]').val() == 1){
+						$('.tooltip_ci').show();
+						$('.tooltip_no_ci').hide();
+						setDocumentTitle('Documento');
+						input_documento_valor.setCedula();
+					} else if ($('#mi_suat_menu_login input[name="documento_tipo_id"]').val() == 214){
+						$('.tooltip_ci').hide();
+						$('.tooltip_no_ci').hide();
+						setDocumentTitle('RUT');
+						input_documento_valor.setRut();
+					} else {
+						$('.tooltip_ci').hide();
+						$('.tooltip_no_ci').show();
+						setDocumentTitle('Documento');
+						input_documento_valor.setDocumento();
+					}
+					
+				}else{
+					$('#misuat_form_login .type_persona').hide();
+					$('#misuat_form_login .type_empresa').show();
+					$('#mi_suat_menu_login input[name="documento_valor"]').val('');
+					input_documento_valor.setRut();
+					
+					$('.tooltip_ci').hide();
+					$('.tooltip_no_ci').hide();
+					setDocumentTitle('RUT');
+				}
+				$.suat.site.groupLogin=$(this).data('type');
+			})
+			$.suat.changeZoom();
+			
+			if(typeof fbq=='undefined'){
+				fbq=function(a, b, c){
+					console.log(a, b, c);
+				};
+			}
+		},
+		// Scroll al TOP y abrir el menu/dropdown de MISUAT
+		openMiSUAT: function(){
+			// Scroll y abrir el menu
+			$('html').animate({scrollTop: 0}, 500, function() {
+				if($('#mobile_misuat_dropdown:visible').length==0){
+					$('.btnLogin').trigger('click');
+				}else{
+					$('#navBar').slideToggle('fast');
+				}
+			});
+			
+		},
+		doLogin: function()	{
+
+		},
+		showLogin: function(callback){
+			if($('#misuat_dropdown').is(":hidden")){
+				//MOBILE
+				$('#mobile_misuat_dropdown').trigger('click');
+				$('#mi_suat_menu').show();
+			}else{
+				//DESKTOP
+				if($('#mi_suat_menu').is(":hidden")){
+					$('.btnLogin').trigger('click');
+				}
+			}
+			$.suat.site.login_callback=callback;
+			$.suat.site.misuat_menu.open('login');
+			$('html').animate({scrollTop: 0}, 500);
+		},
+		showRegistro: function(){
+			$.suat.site.showLogin();
+			$.suat.site.misuat_menu.open('registro');
+		},
+		showRecoveryPassword: function(){
+			$.suat.site.showLogin();
+			$.suat.site.misuat_menu.open('password-recovery');
+		},
+	}, $.suat.site);
+})(jQuery, this);
+
+$(document).ready(function() {
+	$.suat.site.init();
+});

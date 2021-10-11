@@ -1,0 +1,167 @@
+;(function(w){
+	function MiSuatMenuRegistro(){
+		var self = this;
+		this.main = document.getElementById('mi_suat_menu_registro');
+
+		var select_documento_tipo_id = $(this.main).find('select[name="documento_tipo_id"]')[0];		
+		var input_documento_valor = new Input($(this.main).find('input[name="documento_valor"]')[0]);
+		input_documento_valor.setCedula();//Cedula por defecto
+		
+		var registrar_btn = $(this.main).find('.registrar_btn')[0];
+
+		var volver_btn = $(this.main).find('.close')[0];
+		
+		$('#misuat_registro_doc_tipo').on('change', function(){
+			if ($(this).val() == 1){
+				$('.tooltip_ci').show();
+				$('.tooltip_no_ci').hide();
+				setDocumentTitle('Documento');
+				input_documento_valor.setCedula();
+			} else if ($(this).val() == 214){
+				$('.tooltip_ci').hide();
+				$('.tooltip_no_ci').hide();
+				setDocumentTitle('RUT');
+				input_documento_valor.setRut();
+			} else {
+				$('.tooltip_ci').hide();
+				$('.tooltip_no_ci').show();
+				setDocumentTitle('Documento');
+				input_documento_valor.setDocumento();
+			}
+			
+			$('#misuat_registro_doc_valor').val('');
+		});
+
+		$('#misuat_form_registro').submit(function(e){
+			return onClickRegistrarBtn(e);
+		});
+		
+		$(volver_btn).bind('click', onClickVolverBtn);
+
+		this.mostrar = function(){
+			resetear();
+			$(self.main).addClass('active');
+		}
+
+		this.ocultar = function(){
+			$(self.main).removeClass('active');
+		}
+
+		this.setDocumentosTipos = function(data){
+			if(typeof data=='undefined') return true;
+			var option;
+			for(var i=0; i < data.length; i++){
+				option = new Option(data[i].nombre, data[i].id);
+				select_documento_tipo_id.appendChild(option);	
+			}
+		}
+
+		function onClickRegistrarBtn(e){
+			e.preventDefault();
+
+			clearErrors();
+
+			if(input_documento_valor.esVacio()){
+				input_documento_valor.setError(true);
+				$.suat.showMessage($(self.main), 'Debes ingresar tu documento', 'fail');
+				return;
+			}
+
+			// Es tipo de doc cedula, y el formato no es correcto
+			if((select_documento_tipo_id.value == '1') && !$.validarCI(input_documento_valor.getValor())){
+				input_documento_valor.setError(true);
+				$.suat.showMessage($(self.main), 'Número de cédula incorrecto', 'fail');
+				return;
+			}
+
+			var obj = {};
+			if($.suat.site.groupLogin=='empresa'){
+				obj.documento_tipo_id = 214;
+			}else{
+				obj.documento_tipo_id = select_documento_tipo_id.value;
+			}
+			obj.documento_valor = input_documento_valor.getValor();
+
+			sessionStorage.registroPrefill = JSON.stringify(obj);
+
+			checkRegister(obj);
+
+		}
+		
+		function checkRegister(obj)
+		{
+			$(registrar_btn).parent().toggleClass('sending', true);
+
+			$.ajax({
+				url: MISUAT_PATH + 'auth/register-check/',
+				type: 'post',
+				data: obj,
+				success: onUsuarioRegisterCheck,
+				complete: function() { $(registrar_btn).parent().toggleClass('sending', false); }
+			});
+		}
+		
+		function onUsuarioRegisterCheck(response)
+		{
+			var $this = this;
+      
+			if (!response.hasOwnProperty('error')){
+				// Esto no deberia pasar, si pasa es error de Backend
+				return;
+			}
+			
+			if(!response.error){
+				window.location.href = WEB_PATH + 'registro/';
+				
+				// Registo goochi!
+				return true;
+			}
+			
+			if (response.errorType == 1)
+			{
+				$.suat.alerta.mostrar('Registro ', 'Ya eres un usuario registrado. Puedes iniciar sesión o recuperar contraseña.',
+				[{
+					nombre:'Iniciar sesión',
+					callback: function(){
+						$.suat.site.showLogin();
+					},
+					primary:false
+				},{
+					nombre:'Recuperar contraseña',
+					callback: function(){
+						$.suat.site.showRecoveryPassword();
+					},
+					primary:false
+				}]);
+			} else {
+				$.suat.alerta.mostrar('¡Atención!', response.message, [{nombre:'Aceptar', callback:null, primary:false}]);
+			}
+		}
+		
+		////
+
+		function onClickVolverBtn(e){
+			e.preventDefault();
+
+			var evt = jQuery.Event('MI_SUAT_MENU_NAVEGAR');
+			evt.seccion = 'login';
+			$(self.main).trigger(evt);
+
+		}
+
+		function clearErrors(){
+			input_documento_valor.setError(false);
+			
+			$.suat.hideMessage($(self.main));
+		}
+
+		function resetear(){
+			select_documento_tipo_id.selectedIndex = 0;
+			input_documento_valor.resetear();
+
+			$.suat.hideMessage($(self.main));
+		}
+	}
+	
+	w.MiSuatMenuRegistro = MiSuatMenuRegistro;
+})(window)

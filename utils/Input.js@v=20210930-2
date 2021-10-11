@@ -1,0 +1,161 @@
+;(function(w){
+	function Input(input){
+		var self = this;
+		
+		var esDocumento = false;
+
+		this.setError = function(valor){
+			if(valor){
+				$(input).parent().addClass('has-error');
+			}else{
+				$(input).parent().removeClass('has-error');
+			}
+		}
+
+		this.setValor = function(valor){
+			if(typeof input=='undefined'){
+				return false;
+			}
+			input.value = valor;
+		}
+
+		this.setNumerico = function(){
+			if(typeof input=='undefined'){
+				return false;
+			}
+			$(input).numeric();
+		}
+		
+		this.setFecha = function(){
+			if(typeof input=='undefined'){
+				return false;
+			}
+			$(input).mask('99/99/9999', {placeholder:'DD/MM/AAAA'});
+		}
+		
+		this.setDocumento = function(){
+			if(typeof input=='undefined'){
+				return false;
+			}
+			esDocumento = true;
+			
+			$(input).css('text-transform','uppercase');
+			
+			$(input).unmask();
+			
+			$(input).alphanum({
+				allowSpace: false,
+				forceUpper: true,
+				maxLength: 30
+			});
+		}
+		
+		this.setTelefono = function(){
+			if(typeof input=='undefined'){
+				return false;
+			}
+			$(input).numeric();
+		}
+		
+		this.setCedula = function(){
+			if(typeof input=='undefined'){
+				return false;
+			}
+			$(input).alphanum({
+				//allow: '.-',
+				allowNumeric: true,
+				allowLatin  :false,
+				allowOtherCharSets  :false,
+				maxLength: 8
+			});
+			
+			//$(input).off('.alphanum');
+			//$(input).mask('9.999.999-9', {clearIfNotMatch: true});
+		}
+		
+		this.setRut = function(){
+			if(typeof input=='undefined'){
+				return false;
+			}
+			$(input).alphanum({
+				//allow: '.-',
+				allowNumeric: true,
+				allowLatin  :false,
+				allowOtherCharSets  :false,
+				maxLength: 16
+			});
+			
+			//$(input).off('.alphanum');
+			//$(input).mask('9.999.999-9', {clearIfNotMatch: true});
+		}
+
+		this.vaciar = function(){
+			if(typeof input=='undefined'){
+				return false;
+			}
+			input.value = "";
+		}
+
+		this.resetear = function(){
+			self.vaciar();
+			self.setError(false);
+		}
+
+		this.esVacio = function(){
+			if(typeof input=='undefined'){
+				return false;
+			}
+			return self.getValor().replace(/(^\s*)|(\s*$)|[ ]/g, "").length == 0;
+		}
+
+		this.esEmailValido = function(){
+			if(typeof input=='undefined'){
+				return true;
+			}
+			return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(self.getValor());
+		}
+
+		this.esPasswordValido = function(){
+			if(typeof input=='undefined'){
+				return true;
+			}
+			var strValue = self.getValor();
+			
+			var reNro = /[0-9]/;
+			var reChar = /[a-zA-Z]/;
+			
+			return (strValue.length >= 8) && reNro.test(strValue) && reChar.test(strValue);
+		}
+
+		this.esFechaValida = function(){
+			if(typeof input=='undefined'){
+				return true;
+			}
+			var arr_fecha = input.value.split('/');
+			var d = parseInt(arr_fecha[0], 10);
+			var m = parseInt(arr_fecha[1], 10);
+			var y = parseInt(arr_fecha[2], 10);
+			var date = new Date(y,m-1,d);
+			
+			return date.getFullYear() == y && date.getMonth() + 1 == m && date.getDate() == d;
+		}
+		
+		this.getValor = function(){
+			if(typeof input=='undefined'){
+				return true;
+			}
+			return $.trim(input.value);;
+		}
+
+		this.getInput = function(){
+			if(typeof input=='undefined'){
+				return true;
+			}
+			return input;
+		}
+
+	}
+
+	w.Input = Input;
+
+})(window);

@@ -1,0 +1,77 @@
+;(function(w){
+	function MiSuatMenu(){
+		var self = this;
+		this.main = document.getElementById('mi_suat_menu');
+
+		var secciones = {};
+
+		secciones['login'] = new MiSuatMenuLogin();
+		secciones['registro'] = new MiSuatMenuRegistro();
+		secciones['menor_msg'] = new MiSuatMenuMenorMSG();
+		secciones['password-recovery'] = new MiSuatMenuPasswordRecovery();
+		secciones['panel'] = new MiSuatMenuPanel();
+
+		var actual;
+
+		$.ajax({
+			url: MISUAT_PATH + 'ws/documentos-tipos/',
+			type: 'get',
+			async: true,
+			success: function(response){
+				secciones['login'].setDocumentosTipos(response.data);
+				secciones['registro'].setDocumentosTipos(response.data);
+				secciones['password-recovery'].setDocumentosTipos(response.data);
+			}
+		})
+
+		$(this.main).bind('MI_SUAT_MENU_NAVEGAR', onNavegar);
+
+		$(this.main).bind('click', function(e){e.stopPropagation();})
+
+		// Mostrar Mi suat del menú de primera en MOBILE //
+		if ($(window).width() < 992) {
+			if($.suat.usuario){
+				actual = 'panel';
+			}else{
+				actual = 'login';
+			}
+			goSeccion(actual);
+			$('#misuat_dropdown [data-toggle=dropdown]').dropdown('toggle');
+		} else {
+			$(self.main).parent().removeClass('open');
+			//$(this.main).parent().on('show.bs.dropdown.mysuat', function (e) {
+				  if($.suat.usuario){
+					  actual = 'panel';
+				  }else{
+					  actual = 'login';
+				  }
+	
+				  goSeccion(actual);
+			//});
+		}	
+
+		function onNavegar(e){
+			goSeccion(e.seccion);
+		}
+
+		function goSeccion(mostrar)
+		{
+			for (var nombre in secciones)
+			{
+				secciones[nombre].ocultar();
+			}
+
+			secciones[mostrar].mostrar();
+		}
+
+	}
+	
+	MiSuatMenu.prototype.open = function(section){
+		var evt = jQuery.Event('MI_SUAT_MENU_NAVEGAR');
+		evt.seccion = section;
+		$('#mi_suat_menu').trigger(evt);
+		
+	};
+
+	w.MiSuatMenu = MiSuatMenu;
+})(window)

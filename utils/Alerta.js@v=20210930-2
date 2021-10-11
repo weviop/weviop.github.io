@@ -1,0 +1,69 @@
+;(function(w){
+	function Alerta(){
+		var self = this;
+		this.main = document.getElementById('alerta');
+
+		var div_titulo = $(this.main).find('.title')[0];
+		var div_texto = $(this.main).find('.modal-body')[0];
+		var holder_btns = $(this.main).find('.modal-footer')[0];
+		var cerrar_btn = $(this.main).find('.close-modal')[0];
+
+
+		var botones;
+
+		this.mostrar = function(titulo, texto, $botones, cerrar_btn_active){
+			botones = $botones;
+
+			if(typeof cerrar_btn_active == 'undefined' || cerrar_btn_active){
+				$(cerrar_btn).css('display','block');
+			}else{
+				$(cerrar_btn).css('display','none');
+			}
+
+
+			$(div_titulo).html(titulo);
+			$(div_texto).html('<p>'+texto+'</p>');
+			
+			$(holder_btns).empty();
+
+			var clase;
+
+			for(var i=0; i < botones.length; i++){
+				
+				if(botones[i].primary){
+					clase = 'btn-primary';
+				}else{
+					clase = 'btn-default';
+				}
+
+				$(holder_btns).append('<a href="#" class="btn '+clase+' btn-lg"><span>'+botones[i].nombre+'</span></a>');
+			}
+
+			$(holder_btns).find('a').bind('click', onClickBtn);
+
+			$(self.main).modal('show');
+		}
+
+		this.ocultar = function(){
+			$(self.main).modal('hide');
+		}
+
+		function onClickBtn(e){
+			e.preventDefault();
+			//console.log(botones[$(this).index()].notClose === true);
+			if(botones[$(this).index()].notClose !== true)
+				$(self.main).modal('hide');
+
+			if(botones[$(this).index()].callback != null){
+				if(typeof botones[$(this).index()].param != 'undefined'){
+					botones[$(this).index()].callback(botones[$(this).index()].param);
+				}else{
+					botones[$(this).index()].callback();
+				}
+			}
+			
+		}
+	}
+	
+	w.Alerta = Alerta;
+})(window)

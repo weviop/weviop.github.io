@@ -1,0 +1,39 @@
+function runSWF(archivo, ancho, alto, version, bgcolor, id, menu, FlashVars, quality, allowScriptAccess, wMode) { 
+	if(version!="") var version_data=version;
+	else var version_data="9,0,28,0";
+	if(menu!="") menu_data=menu;
+	else menu_data=false;
+	if(bgcolor!="")	var bgcolor_data=bgcolor;
+	else var bgcolor_data="#FFFFFF";
+	if(id!="") id_data=id;
+	else id_data="flashMovie";
+	if(quality!="")	quality_data=quality;
+	else quality_data="high";
+	if(allowScriptAccess!="") allowScriptAccess_data=allowScriptAccess;
+	else allowScriptAccess_data="always";
+	if(wMode!="") wmode_data=wMode;
+	else wmode_data="";
+
+	var quality="high"; // calidad de visualizacion de la peli
+	var video='';
+	video=video+'<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase= "http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version= '+version_data+'" width='+ancho+' height='+alto+'>\n';
+	video=video+'<param name="movie" value='+archivo+'>\n';
+	video=video+'<param name= "allowScriptAccess" value= '+allowScriptAccess_data+'>\n';
+	video=video+'<param name= "allowFullScreen" value="true">\n';
+	video=video+'<param name="quality" value='+quality_data+'>\n';
+	video=video+'<param name="FlashVars" value='+FlashVars+'>\n';
+	video=video+'<param name="bgcolor" value='+bgcolor_data+'>\n';
+	video=video+'<param name="menu" value='+menu_data+' >\n';
+	video=video+'<param name="wmode" value='+wmode_data+' >\n';	
+	video=video+'<embed src='+archivo+' bgcolor='+bgcolor_data+' FlashVars='+FlashVars+' menu='+menu_data+' allowScriptAccess='+allowScriptAccess_data+' allowFullScreen="true" quality='+quality_data+' wmode='+wmode_data+' pluginspage="http://www.macromedia.com/go/getflashplayer" type="application/x-shockwave-flash" width='+ancho+' height='+alto+' swLiveConnect=true name='+id_data+'></embed>';
+	video=video+'</object>\n';
+	
+	$('#'+id).html(video);
+} 
+
+function setDocumentTitle(tipo){
+	$('.data_text_documento').each(function(){
+		$(this).html(tipo);
+		$(this).closest('.form-group').find('input').attr('placeholder', 'Ingresa tu '+tipo);
+	});
+}

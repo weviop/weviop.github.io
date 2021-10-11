@@ -1,0 +1,59 @@
+@charset 'UTF-8';
+/* Slider */
+.slick-loading .slick-list { background:#fff url('ajax-loader.gif') center center no-repeat; }
+
+
+/* Arrows */
+.slick-prev,
+.slick-next {
+    font-size:0; line-height:0; color:transparent; border:none; outline:none; cursor:pointer;
+    position:absolute; top:50%; display:block; width:60px; height:60px; padding:0; background:rgba(26,26,26,0.6); z-index:5; margin-top: -30px;
+    /* -webkit-transform:translate(0, -50%);
+    -ms-transform:translate(0, -50%);
+    transform:translate(0, -50%); */
+    -webkit-transition:all 0.35s ease;
+    -moz-transition:all 0.35s ease;
+    transition:all 0.35s ease;
+}
+.slick-prev:before,
+.slick-next:before {
+    font-family:"fontello"; font-style:normal; font-weight:normal; display:inline-block; width:1em; text-align:center; font-size:1.5rem; font-variant:normal; text-transform:none; line-height:1em; color:#fff;
+    -webkit-transition:all 0.35s ease;
+    -moz-transition:all 0.35s ease;
+    transition:all 0.35s ease;
+}
+.slick-prev:before { content:'\e801'; }
+.slick-next:before { content:'\e80f'; }
+.slick-prev:hover,
+.slick-prev:focus,
+.slick-next:hover,
+.slick-next:focus { outline:none; }
+
+.slick-prev { left:0; }
+[dir='rtl'] .slick-prev { right:0; left:auto; }
+
+.slick-next { right:0; }
+[dir='rtl'] .slick-next { right:auto; left:0; }
+
+.slick-prev:hover,
+.slick-next:hover { background:rgba(26,26,26,1); }
+.slick-prev:hover:before {
+    -webkit-transform:translate3d(-5px,0,0);
+    -moz-transform:translate3d(-5px,0,0);
+    transform:translate3d(-5px,0,0);
+}
+.slick-next:hover:before {
+    -webkit-transform:translate3d(5px,0,0);
+    -moz-transform:translate3d(5px,0,0);
+    transform:translate3d(5px,0,0);
+}
+
+
+/* Dots */
+.slick-dotted.slick-slider { margin-bottom:30px; }
+.slick-dots { position:absolute; bottom:25px; display:block; width:100%; padding:0; margin:0; list-style:none; text-align:center; }
+.slick-dots li { position:relative; display:inline-block; width:12px; height:12px; margin:0 10px; padding:0; cursor:pointer; }
+.slick-dots li button { display:block; font-size:0; width:12px; height:12px; padding:0; cursor:pointer; border:0; outline:none; text-indent:-9999em; background:rgba(48,48,48,0.3); }
+.slick-dots li button:hover,
+.slick-dots li button:focus { outline:none; }
+.slick-dots li.slick-active button { background-color:#e0b72b; }

@@ -1,0 +1,55 @@
+(function($, window, undefined) {
+	$.suat.recetas = $.extend({}, {
+		page:2,
+        initListado: function(){
+			$('select[name=id_recetas_categoria]').change(function(){
+				$.suat.recetas.page=1;
+				$('#listado .btn_more').trigger('click');
+			});
+			$('select[name=id_recetas_tipos]').change(function(){
+				$.suat.recetas.page=1;
+				$('#listado .btn_more').trigger('click');
+			});
+			
+			$('#listado .btn_more').on('click', function(evt){
+				evt.preventDefault();
+				$('#listado').show();
+				$('.listado_no_items').hide();
+				$(this).attr('href', AJAX_PATH+'recetas/more/?id_categoria='+$('select[name=id_recetas_categoria]').val()+'&id_tipo='+$('select[name=id_recetas_tipos]').val()+'&page='+$.suat.recetas.page);
+				$.suat.doEnviar($(this), function(form, data){
+					if(data['html']!=''){
+						if($.suat.recetas.page==1)
+							$('#listado .items').html('');
+
+						$('#listado .items').append(data['html']);
+
+						if(data.lastPage)
+							$('#listado .btn_more').hide();
+						else
+							$('#listado .btn_more').show();
+
+						$.suat.recetas.page++;
+					}else{
+						$('#listado').hide();
+						$('.listado_no_items').show();
+					}
+				});
+			});
+		},
+		initDetalle: function(){
+			$('.media-slider').slick({
+				dots: true,
+				autoplay: true,
+				autoplaySpeed: 3000,
+				responsive: [
+				{
+					breakpoint: 480,
+					settings: {
+						arrows: false
+					}
+				}
+				]
+			});			
+		}
+	}, $.suat.recetas);
+})(jQuery, this);

@@ -1,0 +1,219 @@
+;(function(w){
+	function MiSuatMenuLogin(){
+		var self = this;
+		this.main = document.getElementById('mi_suat_menu_login');
+
+		var select_documento_tipo_id = $(this.main).find('select[name="documento_tipo_id"]')[0];
+		var input_documento_valor = new Input($(this.main).find('input[name="documento_valor"]')[0]);
+		input_documento_valor.setCedula();//Cedula por defecto
+
+		var input_password = new Input($(this.main).find('input[name="password"]')[0]);
+
+		var ingresar_btn = $(this.main).find('.ingresar_btn')[0];
+
+		var registrar_btn = $(this.main).find('.registrar_btn')[0];
+		var password_recovery_btn = $(this.main).find('.password_recovery_btn')[0];
+
+		var enviando = false;
+		
+		
+		$('#misuat_login_doc_tipo').on('change', function(){
+			if ($(this).val() == 1){
+				$('.tooltip_ci').show();
+				$('.tooltip_no_ci').hide();
+				setDocumentTitle('Documento');
+				input_documento_valor.setCedula();
+			} else if ($(this).val() == 214){
+				$('.tooltip_ci').hide();
+				$('.tooltip_no_ci').hide();
+				setDocumentTitle('RUT');
+				input_documento_valor.setRut();
+			} else {
+				$('.tooltip_ci').hide();
+				$('.tooltip_no_ci').show();
+				setDocumentTitle('Documento');
+				input_documento_valor.setDocumento();
+			}
+			
+			$('#misuat_login_doc_valor').val('');
+		});
+
+		$('#misuat_form_login').submit(function(e){
+			return onClickIngresarBtn(e);
+		});
+		
+		$(registrar_btn).bind('click', onClickRegistrarBtn);
+		$(password_recovery_btn).bind('click', onClickPasswordRecoveryBtn);
+
+		this.mostrar = function(){
+			resetear();
+			$(self.main).addClass('active');
+		}
+
+		this.ocultar = function(){
+			$(self.main).removeClass('active');
+		}
+
+		this.setDocumentosTipos = function(data){
+			if(typeof data=='undefined') return true;
+			var option;
+			for(var i=0; i < data.length; i++){
+				option = new Option(data[i].nombre, data[i].id);
+				select_documento_tipo_id.appendChild(option);
+			}
+		}
+
+		function onClickIngresarBtn(e){
+			e.preventDefault();
+			loguear();
+		}
+
+		function loguear(){
+			if(!enviando){
+				clearErrors();
+				
+				if(input_documento_valor.esVacio()){
+					input_documento_valor.setError(true);
+					$.suat.showMessage($(self.main), 'Debes ingresar tu documento', 'fail');
+					return;
+				}
+
+				if(input_password.esVacio()){
+					input_password.setError(true);
+					$.suat.showMessage($(self.main), 'Debes ingresar tu contraseña', 'fail');
+					return;
+				}
+				
+				// Es tipo de doc cedula, y el formato no es correcto
+				if($.suat.site.groupLogin=='persona' && select_documento_tipo_id.value == '1' && !$.validarCI(input_documento_valor.getValor())){
+					input_documento_valor.setError(true);
+					$.suat.showMessage($(self.main), 'Número de cédula incorrecto', 'fail');
+					return;
+				}
+
+				var obj = {};
+				if($.suat.site.groupLogin=='empresa'){
+					obj.documento_tipo_id = 214;
+				}else{
+					obj.documento_tipo_id = select_documento_tipo_id.value;
+				}
+				obj.documento_valor = input_documento_valor.getValor();
+				obj.password = input_password.getValor();
+
+				enviando = true;
+				
+				$(ingresar_btn).parent().toggleClass('sending', true);
+
+				$.ajax({
+					url: MISUAT_PATH + 'auth/login/',
+					type: 'post',
+					data: obj,
+					success: onUsuarioLogin,
+					complete: function() { $(ingresar_btn).parent().toggleClass('sending', false); }
+				});
+			}
+		}
+
+		function onUsuarioLogin(response){
+			enviando = false;
+
+			if (!response.hasOwnProperty('error')){
+				return;
+			}
+
+			if(response.error){
+				input_password.resetear();
+				$.suat.showMessage($(self.main), response.message, 'fail');
+			}else if (response.error == false){
+
+				$.suat.usuario = response.usuario;
+
+				var evt = jQuery.Event('MI_SUAT_MENU_NAVEGAR');
+				evt.seccion = 'panel';
+				$(self.main).trigger(evt);
+
+				if (response.menor_mayor){
+					window.location.href = WEB_PATH + 'mi_suat/menor-actualizar/';
+				}else if($.suat.site.groupLogin=='empresa'){
+					window.location.href = WEB_PATH + 'servicios_empresariales/medicina_empresarial/';
+				}
+
+				if (response.pwd_insegura && !window.localStorage.getItem('skipAlertPassword')){
+					$.suat.alerta.mostrar('Contraseña Insegura',
+						'La contraseña que está usando no es segura. ¿Deseas modificarla?',
+						[{nombre:'Continuar', callback: confirmarPasswordInsegura, param:false, primary:false},
+						{nombre:'Reintentar', callback: confirmarPasswordInsegura,  param:true, primary:true}],
+						false);
+				}
+				
+				if(typeof $.suat.site.login_callback=='function'){
+					$.suat.site.login_callback();
+				}
+//				if(document.location.pathname.indexOf('e-factura')>0){
+//					document.location.reload();
+//				}
+			}
+		}
+
+		function confirmarPasswordInsegura(modificar){
+			if (modificar){
+				window.location.href = WEB_PATH + 'mi_suat/privacidad/';
+			} else {
+				window.localStorage.setItem('skipAlertPassword', true);
+			}
+		}
+
+		function clearErrors(){
+			input_documento_valor.setError(false);
+			input_password.setError(false);
+
+			$.suat.hideMessage($(self.main));
+		}
+
+		function resetear(){
+//			select_documento_tipo_id.selectedIndex = 0;
+//			input_documento_valor.resetear();
+//			input_password.resetear();
+
+			$.suat.hideMessage($(self.main));
+		}
+
+
+		function onClickRegistrarBtn(e){
+			e.preventDefault();
+			
+			var evt = jQuery.Event('MI_SUAT_MENU_NAVEGAR');
+			evt.seccion = 'registro';
+			$(self.main).trigger(evt);
+
+			if($.suat.site.groupLogin=='empresa'){
+				$('#misuat_registro_doc_tipo').closest('.form-group').hide();
+				$('#misuat_registro_doc_tipo').val(214);
+			}else{
+				$('#misuat_registro_doc_tipo').closest('.form-group').show();
+				$('#misuat_registro_doc_tipo').val($('#misuat_login_doc_tipo').val());
+			}
+			$('#misuat_registro_doc_valor').val($('#misuat_login_doc_valor').val());
+			
+			var input_documento_valor = new Input($('#misuat_registro_doc_valor')[0]);
+			if ($('#misuat_registro_doc_tipo').val() == "1") {
+				input_documento_valor.setCedula();
+			}else if ($.suat.site.groupLogin == "empresa") {
+				input_documento_valor.setRut();
+			} else {
+				input_documento_valor.setDocumento();
+			}
+		}
+		
+		function onClickPasswordRecoveryBtn(e){
+			e.preventDefault();
+			var evt = jQuery.Event('MI_SUAT_MENU_NAVEGAR');
+			evt.seccion = 'password-recovery';
+			$(self.main).trigger(evt);
+		}
+
+
+	}
+
+	w.MiSuatMenuLogin = MiSuatMenuLogin;
+})(window)

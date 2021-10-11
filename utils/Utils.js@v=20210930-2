@@ -1,0 +1,23 @@
+;(function(w){
+	function Utils(){
+		
+	}
+
+	//Recibe una fecha de nacimiento (año, mes y día) y devuelve true si es mayor de edad (18+)
+	Utils.esMayor = function(ano, mes, dia){
+		
+		var date = new Date(ano, mes - 1, dia, 0, 0, 0);
+
+		var fecha_nac_18 = new Date();
+		fecha_nac_18.setFullYear(fecha_nac_18.getFullYear() - 18);
+		fecha_nac_18.setHours(0,0,0,0);
+
+		return fecha_nac_18 >= date;
+	}
+
+	
+	w.Utils = Utils;
+})(window)
+
+
+
